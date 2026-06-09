@@ -1,0 +1,29 @@
+﻿using LiteNetLib;
+using MMO.Shared.Packets;
+using Shared;
+using UnityEngine;
+
+namespace ArcheCore.Client.Networking.C2W
+{
+    public static class C2WMovementPacket
+    {
+        public static void Send(
+            NetPeer peer,
+            Vector3 position)
+        {
+            if (peer == null)
+                return;
+
+            PacketSender.SendPacket(
+                peer,
+                PacketType.PlayerMove,
+                new PlayerMovePacket
+                {
+                    x = position.x,
+                    y = position.y,
+                    z = position.z
+                },
+                DeliveryMethod.Unreliable);
+        }
+    }
+}
