@@ -1,2 +1,2 @@
 @echo off
-start ArcheCore.Client.exe -token 3625d92a-8b6c-492c-a73b-2526ceacb4c0
+start ArcheCore.Client.exe -token b6cd2bfd-ed27-45f3-a787-3ae1de0b316f
