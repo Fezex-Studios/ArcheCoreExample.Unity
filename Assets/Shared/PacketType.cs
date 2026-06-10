@@ -9,5 +9,6 @@ namespace Shared
         PlayerPosition = 5,
         Authenticate = 6,
         PlayerLeave  = 7,
+        SpawnCube = 8,
     }
 }

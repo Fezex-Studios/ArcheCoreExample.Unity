@@ -22,9 +22,10 @@ namespace ArcheCore.WorldServer.Managers
         private readonly Dictionary<int, Vector3> positions   = new();
 
         private readonly ConcurrentQueue<Action> pendingActions = new();
-
+        private readonly SpawnManager spawnManager;
         public IReadOnlyDictionary<NetPeer, int> PeerToId => peerToId;
         public Dictionary<int, Vector3>          Positions => positions;
+        
 
         private readonly LuaEngine luaEngine = new();
 
@@ -47,6 +48,10 @@ namespace ArcheCore.WorldServer.Managers
         {
             pendingActions.Enqueue(action);
         }
+        public PlayerManager(SpawnManager spawnManager)
+        {
+            this.spawnManager = spawnManager;
+        }
 
         public void HandlePlayerConnected(NetPeer peer, int accountId)
         {
@@ -64,7 +69,9 @@ namespace ArcheCore.WorldServer.Managers
 
             luaEngine.RunFile(scriptPath);
             luaEngine.CallFunction("on_player_connect", luaPlayer);
-
+            
+            Debug.Log($"spawnManager null? {spawnManager == null}");            
+            spawnManager.SendCubesToPeer(peer);
             // Send all existing players to the new joiner
             foreach (var kvp in peerToId)
             {

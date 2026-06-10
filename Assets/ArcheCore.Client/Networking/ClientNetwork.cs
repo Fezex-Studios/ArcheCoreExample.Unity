@@ -74,6 +74,7 @@ namespace ArcheCore.Client.Networking
             dispatcher.Register(PacketType.SpawnPlayer,    new W2CSpawnPlayerHandler());
             dispatcher.Register(PacketType.PlayerPosition, new W2CPlayerPositionHandler());
             dispatcher.Register(PacketType.PlayerLeave,    new W2CPlayerLeaveHandler());
+            dispatcher.Register(PacketType.SpawnCube, new W2CSpawnCubeHandler());
         }
 
         public void OnPeerConnected(NetPeer peer)

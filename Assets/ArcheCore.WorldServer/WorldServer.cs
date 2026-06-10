@@ -15,12 +15,14 @@ namespace ArcheCore.WorldServer
 
         private PacketDispatcher packetDispatcher;
         private PlayerManager playerManager;
+        private readonly SpawnManager spawnManager = new();
 
         private const string ConnectionKey = "MMO";
 
         public void Start()
         {
-            playerManager = new PlayerManager();
+            spawnManager.SpawnInitialCubes();
+            playerManager = new PlayerManager(spawnManager);
 
             packetDispatcher = new PacketDispatcher();
 
