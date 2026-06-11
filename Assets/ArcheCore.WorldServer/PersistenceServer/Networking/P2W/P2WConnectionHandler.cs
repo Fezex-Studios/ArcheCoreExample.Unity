@@ -3,18 +3,18 @@ using UnityEngine;
 
 namespace ArcheCore.WorldServer.PersistenceServer.Networking.P2W
 {
-    public class HelloHandler
+    public class P2WConnectResponseHandler
         : IPersistencePacketHandler
     {
         public void Handle(Packet packet)
         {
-            var hello =
+            var response =
                 MessagePackSerializer
-                    .Deserialize<HelloPayload>(
+                    .Deserialize<P2WConnectResponse>(
                         packet.Payload);
 
             Debug.Log(
-                $"Received: {hello.Message}");
+                response.Message);
         }
     }
 }

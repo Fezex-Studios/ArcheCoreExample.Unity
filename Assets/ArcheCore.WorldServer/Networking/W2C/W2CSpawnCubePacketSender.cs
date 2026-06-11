@@ -5,7 +5,7 @@ using Shared.Components;
 
 namespace ArcheCore.WorldServer.Networking.W2C
 {
-    public static class W2CSpawnCubePacket
+    public static class W2CSpawnCubePacketSender
     {
         public static void Send(
             NetPeer peer,

@@ -3,6 +3,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using ArcheCore.WorldServer.PersistenceServer.Networking;
 using ArcheCore.WorldServer.PersistenceServer.Networking.P2W;
+using ArcheCore.WorldServer.PersistenceServer.Packets;
 using ArcheCore.WorldServer.ServerConfig;
 using MessagePack;
 
@@ -35,25 +36,22 @@ namespace Worldserver.ArcheCore.PersistenceServer.Scripts
 
             stream =
                 client.GetStream();
-
-            Debug.Log(
-                "Connected To Persistence");
-
+            
             _ = ReceiveLoop();
 
             await Send(
-                PersistenceOpcode.Hello,
-                new HelloPayload
+                PersistenceOpcode.W2PConnectRequest,
+                new W2PConnectionRequest
                 {
-                    Message = "HELLO FROM WORLD SERVER"
+                    Message = "WorldServer 1 has connected"
                 });
         }
 
         private void RegisterHandlers()
         {
             dispatcher.Register(
-                PersistenceOpcode.Hello,
-                new HelloHandler());
+                PersistenceOpcode.P2WConnectResponse,
+                new P2WConnectResponseHandler());
 
             dispatcher.Register(
                 PersistenceOpcode.CharacterLoad,
@@ -90,7 +88,7 @@ namespace Worldserver.ArcheCore.PersistenceServer.Scripts
                 packetBytes);
 
             Debug.Log(
-                $"Sent {opcode}");
+                $"[World] Sent {opcode}");
         }
 
         private async Task ReceiveLoop()
@@ -126,6 +124,8 @@ namespace Worldserver.ArcheCore.PersistenceServer.Scripts
                         MessagePackSerializer
                             .Deserialize<Packet>(
                                 packetBuffer);
+                    
+                    Debug.Log($"[World] Received {(PersistenceOpcode)packet.Opcode}");
 
                     dispatcher.Handle(
                         packet);

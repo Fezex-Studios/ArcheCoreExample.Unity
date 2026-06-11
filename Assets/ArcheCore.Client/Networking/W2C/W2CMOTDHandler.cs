@@ -1,10 +1,10 @@
 ﻿using ArcheCore.Client.Networking;
 using LiteNetLib;
 using MessagePack;
-using MMO.Shared.Packets;
+using Shared.Packets;
 using UnityEngine;
 
-namespace MMO.Client.Networking.W2C.Handlers
+namespace ArcheCore.Client.Networking.W2C
 {
     public class W2CMOTDHandler
         : IClientPacketHandler

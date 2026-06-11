@@ -2,7 +2,6 @@
 using ArcheCore.Client.Networking.W2C;
 using Client.Scripts;
 using LiteNetLib;
-using MMO.Client.Networking.W2C.Handlers;
 using Shared;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -75,6 +74,7 @@ namespace ArcheCore.Client.Networking
             dispatcher.Register(PacketType.PlayerPosition, new W2CPlayerPositionHandler());
             dispatcher.Register(PacketType.PlayerLeave,    new W2CPlayerLeaveHandler());
             dispatcher.Register(PacketType.SpawnCube, new W2CSpawnCubeHandler());
+            dispatcher.Register(PacketType.Announcement, new W2CAnnouncementHandler());
         }
 
         public void OnPeerConnected(NetPeer peer)

@@ -1,7 +1,7 @@
 ﻿using MessagePack;
 
 [MessagePackObject(true)]
-public class HelloPayload
+public class P2WConnectResponse
 {
     public string Message;
 }

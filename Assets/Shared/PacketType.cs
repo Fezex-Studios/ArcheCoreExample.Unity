@@ -10,5 +10,6 @@ namespace Shared
         Authenticate = 6,
         PlayerLeave  = 7,
         SpawnCube = 8,
+        Announcement = 9
     }
 }

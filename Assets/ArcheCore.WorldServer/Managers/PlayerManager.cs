@@ -55,7 +55,7 @@ namespace ArcheCore.WorldServer.Managers
 
         public void HandlePlayerConnected(NetPeer peer, int accountId)
         {
-            W2CMOTDPacket.Send(peer, ConfigService.Config.MOTD);
+            W2CMOTDPacketSender.Send(peer, ConfigService.Config.MOTD);
 
             int newId = SpawnPlayer(peer, accountId);
 

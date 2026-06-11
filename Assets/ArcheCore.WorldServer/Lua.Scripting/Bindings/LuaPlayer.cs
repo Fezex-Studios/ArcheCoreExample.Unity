@@ -25,9 +25,9 @@ namespace ArcheCore.WorldServer.Lua.Scripting.Bindings
         }
 
         // Methods Lua can call
-        public void SendMessage(string message)
+        public void SendAnnouncementMessage(string message)
         {
-            W2CMOTDPacket.Send(peer, message);
+            W2CAnnouncementPacketSender.Send(peer, message);
         }
 
         public void Kick(string reason)

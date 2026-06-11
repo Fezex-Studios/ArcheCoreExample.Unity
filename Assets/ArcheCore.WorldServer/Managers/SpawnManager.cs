@@ -35,7 +35,7 @@ namespace ArcheCore.WorldServer.Managers
         {
             foreach (var kvp in cubes)
             {
-                W2CSpawnCubePacket.Send(
+                W2CSpawnCubePacketSender.Send(
                     peer,
                     kvp.Key,
                     kvp.Value.x,

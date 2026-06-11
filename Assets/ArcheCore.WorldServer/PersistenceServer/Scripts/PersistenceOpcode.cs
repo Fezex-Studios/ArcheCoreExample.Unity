@@ -1,6 +1,9 @@
 ﻿public enum PersistenceOpcode : ushort
 {
-    Hello = 1,
+    W2PConnectRequest = 1,
+
     CharacterSave = 2,
-    CharacterLoad = 3
+
+    CharacterLoad = 3,
+    P2WConnectResponse=4,
 }

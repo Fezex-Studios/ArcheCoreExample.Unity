@@ -1,9 +1,9 @@
-﻿using MessagePack;
+using MessagePack;
 
 namespace Shared.Packets
 {
     [MessagePackObject(true)]
-    public class MOTDPacket
+    public class AnnouncementPacket
     {
         public string Message;
     }
