@@ -17,17 +17,17 @@ namespace ArcheCore.WorldServer.PersistenceServer.Networking
                 handler;
         }
 
-        public void Handle(Packet packet)
+        public void Handle(PersistencePacket persistencePacket)
         {
             PersistenceOpcode opcode =
                 (PersistenceOpcode)
-                packet.Opcode;
+                persistencePacket.Opcode;
 
             if(handlers.TryGetValue(
                    opcode,
                    out var handler))
             {
-                handler.Handle(packet);
+                handler.Handle(persistencePacket);
             }
         }
     }

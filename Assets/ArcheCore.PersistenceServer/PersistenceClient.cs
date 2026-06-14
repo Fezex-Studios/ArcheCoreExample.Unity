@@ -77,13 +77,13 @@ namespace Worldserver.ArcheCore.PersistenceServer.Scripts
 
         internal async Task Send<T>(PersistenceOpcode opcode, T payload)
         {
-            Packet packet = new Packet
+            PersistencePacket persistencePacket = new PersistencePacket
             {
                 Opcode  = (ushort)opcode,
                 Payload = MessagePackSerializer.Serialize(payload)
             };
 
-            byte[] packetBytes = MessagePackSerializer.Serialize(packet);
+            byte[] packetBytes = MessagePackSerializer.Serialize(persistencePacket);
             byte[] lengthBytes = BitConverter.GetBytes(packetBytes.Length);
 
             await stream.WriteAsync(lengthBytes);
@@ -109,11 +109,11 @@ namespace Worldserver.ArcheCore.PersistenceServer.Scripts
 
                     await ReadExact(packetBuffer, packetLength);
 
-                    Packet packet = MessagePackSerializer.Deserialize<Packet>(packetBuffer);
+                    PersistencePacket persistencePacket = MessagePackSerializer.Deserialize<PersistencePacket>(packetBuffer);
 
-                    Debug.Log($"[World] Received {(PersistenceOpcode)packet.Opcode}");
+                    Debug.Log($"[World] Received {(PersistenceOpcode)persistencePacket.Opcode}");
 
-                    dispatcher.Handle(packet);
+                    dispatcher.Handle(persistencePacket);
                 }
                 catch (Exception e)
                 {

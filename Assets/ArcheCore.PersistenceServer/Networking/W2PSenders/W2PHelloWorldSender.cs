@@ -14,7 +14,7 @@ namespace ArcheCore.WorldServer.PersistenceServer.Senders
 
         public async Task Send(string message)
         {
-            await _client.Send(PersistenceOpcode.HelloWorld,new HelloWorldPacket{Message = message});
+            await _client.Send(PersistenceOpcode.HelloWorld,new W2PHelloWorldPacket{Message = message});
         }
         
     }
