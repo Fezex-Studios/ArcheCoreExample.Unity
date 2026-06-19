@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
+using ArcheCore.WorldServer;
 using ArcheCore.WorldServer.Lua.Scripting;
 using ArcheCore.WorldServer.Lua.Scripting.Bindings;
 using ArcheCore.WorldServer.Networking.W2C;
@@ -26,6 +27,9 @@ namespace ArcheCore.WorldServer.Managers
         private readonly Dictionary<int, long>     idToCharacterId = new();
         private readonly Dictionary<int, string>   idToName        = new();
         private readonly Dictionary<int, int>      idToLevel       = new();
+
+        // Tracks one peer per account — used to detect and kick duplicate logins
+        private readonly Dictionary<int, NetPeer>  accountToPeer   = new();
 
         private readonly ConcurrentQueue<Action> pendingActions = new();
 
@@ -53,6 +57,16 @@ namespace ArcheCore.WorldServer.Managers
             }
         }
 
+        /// <summary>
+        /// Loads every script in the Lua/Server directory once and lets them
+        /// register their event hooks. Call exactly once at server start,
+        /// before any players can connect.
+        /// </summary>
+        public void InitializeScripts()
+        {
+            luaEngine.LoadAllScripts(ServerPaths.Lua);
+        }
+
         public void EnqueueAction(Action action)
         {
             pendingActions.Enqueue(action);
@@ -63,15 +77,32 @@ namespace ArcheCore.WorldServer.Managers
             int accountId,
             P2WCharacterLoadResponse character)
         {
+            // ── Duplicate login check ─────────────────────────────────────────
+            // If this account is already connected on another peer, kick that
+            // peer before letting the new one in. Same behavior as most MMOs:
+            // "Your account has been logged in from another location."
+            if (accountToPeer.TryGetValue(accountId, out NetPeer existingPeer))
+            {
+                WorldLogger.Warning(
+                    $"[PlayerManager] AccountId={accountId} already connected — kicking existing peer {existingPeer.Address}");
+
+                // Clean up the old peer's data first, then disconnect it.
+                // We call our own cleanup directly rather than relying on
+                // OnPeerDisconnected firing, because Disconnect() is async
+                // and we need the old data gone before spawning the new player.
+                CleanupPeer(existingPeer, save: true);
+                existingPeer.Disconnect();
+            }
+
+            // Register the new peer for this account
+            accountToPeer[accountId] = peer;
+
             W2CMOTDPacketSender.Send(_replication, peer, ConfigService.Config.MOTD);
 
             int newId = SpawnPlayer(peer, accountId, character);
 
-            LuaPlayer luaPlayer = new LuaPlayer(peer, newId, accountId,_replication);
-            string scriptPath = Path.Combine(
-                Directory.GetCurrentDirectory(), "Lua", "Server", "on_player_connect.lua");
-            luaEngine.RunFile(scriptPath);
-            luaEngine.CallFunction("on_player_connect", luaPlayer);
+            LuaPlayer luaPlayer = new LuaPlayer(peer, newId, accountId, _replication);
+            luaEngine.FireEvent(PlayerEvent.OnConnect, luaPlayer);
 
             _spawnManager.SendCubesToPeer(peer);
 
@@ -91,16 +122,37 @@ namespace ArcheCore.WorldServer.Managers
 
         public void HandlePlayerDisconnected(NetPeer peer)
         {
+            CleanupPeer(peer, save: true);
+        }
+
+        /// <summary>
+        /// Removes all state for a peer. Called on normal disconnect and on
+        /// duplicate-login kick. Pass save=true to persist character data.
+        /// </summary>
+        private void CleanupPeer(NetPeer peer, bool save)
+        {
             if (!peerToId.TryGetValue(peer, out int networkId))
                 return;
 
-            if (idToCharacterId.TryGetValue(networkId, out long characterId))
+            // Save character if requested and we have data for it
+            if (save && idToCharacterId.TryGetValue(networkId, out long characterId))
             {
                 string  name  = idToName.GetValueOrDefault(networkId, "Unknown");
                 int     level = idToLevel.GetValueOrDefault(networkId, 1);
                 Vector3 pos   = positions.GetValueOrDefault(networkId, Vector3.zero);
 
                 _ = SaveCharacterAsync(characterId, name, level, pos);
+            }
+
+            // Remove from accountToPeer only if this peer is still the registered one.
+            // If a duplicate login already replaced it, don't remove the new peer's entry.
+            if (idToAccount.TryGetValue(networkId, out int accountId))
+            {
+                if (accountToPeer.TryGetValue(accountId, out NetPeer registeredPeer)
+                    && registeredPeer == peer)
+                {
+                    accountToPeer.Remove(accountId);
+                }
             }
 
             peerToId.Remove(peer);
@@ -110,7 +162,7 @@ namespace ArcheCore.WorldServer.Managers
             idToName.Remove(networkId);
             idToLevel.Remove(networkId);
 
-            WorldLogger.Info($"Player {networkId} disconnected");
+            WorldLogger.Info($"[PlayerManager] Player {networkId} (AccountId={accountId}) disconnected");
 
             W2CPlayerLeavePacketSender.Send(_replication, peerToId.Keys, networkId);
         }
@@ -156,7 +208,7 @@ namespace ArcheCore.WorldServer.Managers
             }
 
             WorldLogger.Info(
-                $"Spawned player {networkId} (AccountId={accountId}, CharacterId={character.CharacterId}, Name={character.Name})");
+                $"[PlayerManager] Spawned player {networkId} (AccountId={accountId}, Name={character.Name})");
 
             return networkId;
         }
@@ -173,7 +225,7 @@ namespace ArcheCore.WorldServer.Managers
             }
 
             await persistence.W2PCharacter.Save(characterId, name, level, pos.x, pos.y, pos.z);
-            WorldLogger.Info($"Saved character {characterId} ({name})");
+            WorldLogger.Info($"[PlayerManager] Saved character {characterId} ({name})");
         }
     }
 }

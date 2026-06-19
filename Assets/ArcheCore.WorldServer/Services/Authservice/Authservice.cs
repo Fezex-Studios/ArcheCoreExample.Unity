@@ -11,6 +11,9 @@ namespace Shared.AuthService
     /// <summary>
     /// Calls the Auth Server's /validate-session endpoint.
     /// Returns the AccountId on success, or -1 if the token is invalid/expired.
+    ///
+    /// Requires INTERNAL_SECRET in ServerConfig.json to match the Auth Server's
+    /// INTERNAL_SECRET environment variable.
     /// </summary>
     public static class AuthService
     {
@@ -33,12 +36,21 @@ namespace Shared.AuthService
                 string url  = $"{ConfigService.Config.AuthServerUrl}/validate-session";
                 string body = JsonConvert.SerializeObject(new { Token = token });
 
-                StringContent content = new StringContent(
-                    body,
-                    Encoding.UTF8,
-                    "application/json");
+                var request = new HttpRequestMessage(HttpMethod.Post, url)
+                {
+                    Content = new StringContent(body, Encoding.UTF8, "application/json")
+                };
 
-                HttpResponseMessage response = await Http.PostAsync(url, content);
+                // Internal secret — must match INTERNAL_SECRET in the Auth Server .env
+                request.Headers.Add("x-internal-secret", ConfigService.Config.InternalSecret);
+
+                HttpResponseMessage response = await Http.SendAsync(request);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    Debug.LogError($"[AuthService] Validate request failed with status {response.StatusCode}");
+                    return -1;
+                }
 
                 string json = await response.Content.ReadAsStringAsync();
 

@@ -23,6 +23,7 @@ namespace ArcheCore.WorldServer
             replication  = new ReplicationManager();
             spawnManager = new SpawnManager(replication);
             playerManager = new PlayerManager(spawnManager, replication);
+            playerManager.InitializeScripts();
 
             spawnManager.SpawnInitialCubes();
 

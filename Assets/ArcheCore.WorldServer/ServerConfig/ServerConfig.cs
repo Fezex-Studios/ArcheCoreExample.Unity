@@ -5,7 +5,7 @@ namespace ArcheCore.WorldServer.ServerConfig
     [Serializable]
     public class ServerConfig
     {
-        public string ServerName = "Arc MMO";
+        public string ServerName = "ArcheCore";
 
         public int Port = 7777;
 
@@ -17,7 +17,10 @@ namespace ArcheCore.WorldServer.ServerConfig
 
         public string MOTD = "HELLO WELCOME TO THE SERVER!!!";
 
-        // URL of your Node.js auth server
         public string AuthServerUrl = "http://127.0.0.1:3000";
+
+        // Must match INTERNAL_SECRET in the Auth Server's .env file.
+        // Generate a strong random string and keep it out of source control.
+        public string InternalSecret = "replace_this_with_a_real_secret";
     }
 }
